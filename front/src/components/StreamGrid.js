@@ -35,22 +35,11 @@ function StreamGrid() {
     fetchStreams();
   }, [page]);
 
-  // Handle scroll for infinite loading
-  useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop
-        === document.documentElement.offsetHeight
-      ) {
-        if (!loading && hasMore) {
-          setPage(prev => prev + 1);
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loading, hasMore]);
+  const handleLoadMore = () => {
+    if (!loading && hasMore) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   return (
     <div className="stream-grid-container">
@@ -62,11 +51,21 @@ function StreamGrid() {
           <StreamCard key={`loading-${index}`} isLoading={true} />
         ))}
       </div>
-      {!hasMore && !loading && (
-        <div className="end-of-content">
-          No more streams to load
-        </div>
-      )}
+      <div className="load-more-container">
+        {hasMore ? (
+          <button 
+            className="load-more-btn" 
+            onClick={handleLoadMore}
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Load More'}
+          </button>
+        ) : (
+          <div className="end-of-content">
+            No more streams to load
+          </div>
+        )}
+      </div>
     </div>
   );
 }
