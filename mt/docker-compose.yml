@@ -1,0 +1,16 @@
+version: '3'
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest-ffmpeg
+    container_name: mediamtx
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+    ports:
+      - "8554:8554"   # RTSP
+      - "9997:9997"   # HTTP-API
+    networks:
+      - streaming
+
+networks:
+  streaming:
+    driver: bridge
