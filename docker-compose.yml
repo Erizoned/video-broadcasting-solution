@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    container_name: rtmp-rtsp-converter
+    ports:
+      - "8000:8000"
+    depends_on:
+      - rtsp-server
+
+  rtsp-server:
+    image: aler9/rtsp-simple-server
+    container_name: rtsp-server
+    ports:
+      - "8554:8554"
