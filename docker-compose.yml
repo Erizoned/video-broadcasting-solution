@@ -7,14 +7,28 @@ services:
       - "8000:8000"
     depends_on:
       - rtsp-server
+      - rtmp-server
 
   rtsp-server:
     image: aler9/rtsp-simple-server
     container_name: rtsp-server
     ports:
       - "8554:8554"
+
   rtmp-server:
     image: tiangolo/nginx-rtmp
     container_name: nginx-rtmp
     ports:
       - "1935:1935"
+
+  mjpeg-viewer:
+    image: jrottenberg/ffmpeg
+    container_name: mjpeg-viewer
+    command: >
+      -rtsp_transport tcp -i rtsp://rtsp-server:8554/test
+      -c:v mjpeg -q:v 5 -f mpjpeg -listen 1 http://0.0.0.0:8090
+    ports:
+      - "8090:8090"
+    depends_on:
+      - rtsp-server
+      - backend

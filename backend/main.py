@@ -6,36 +6,41 @@ from typing import Dict
 app = FastAPI()
 
 class StreamRequest(BaseModel):
-    input_rtmp: str       # RTMP-адрес источника
-    stream_name: str      # Уникальное имя для RTSP-потока
+    input_rtmp: str       # RTMP source URL
+    stream_name: str      # Unique name for RTSP stream
 
-# Хранилище активных FFmpeg-процессов
+# Store active FFmpeg processes
 streams: Dict[str, subprocess.Popen] = {}
+
+# Environment or default RTSP server hostname in Docker network
+RTSP_SERVER_HOST = "rtsp-server"  # service name in docker-compose
+RTSP_SERVER_PORT = 8554
 
 @app.post("/convert")
 async def start_conversion(req: StreamRequest):
-    # Проверяем, что поток с таким именем ещё не запущен
     if req.stream_name in streams:
         raise HTTPException(status_code=400, detail="Stream already running")
 
-    # RTSP-адрес, по которому будем отдавать поток
-    rtsp_url = f"rtsp://localhost:8554/{req.stream_name}"
+    # Container-internal RTSP URL for publishing
+    container_rtsp_url = f"rtsp://{RTSP_SERVER_HOST}:{RTSP_SERVER_PORT}/{req.stream_name}"
+    # Public RTSP URL returned to client
+    public_rtsp_url = f"rtsp://localhost:{RTSP_SERVER_PORT}/{req.stream_name}"
 
-    # Команда FFmpeg: читаем RTMP, копируем кодеки, отдаём RTSP
+    # Spawn FFmpeg: read RTMP, copy codecs, publish to RTSP
     cmd = [
-        "ffmpeg", "-i", req.input_rtmp,
-        "-c", "copy", "-f", "rtsp", rtsp_url
+        "ffmpeg", "-rtsp_transport", "tcp", "-i", req.input_rtmp,
+        "-c", "copy", "-f", "rtsp", container_rtsp_url
     ]
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="ffmpeg not found in container")
 
-    # Запускаем FFmpeg в фоновом режиме
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     streams[req.stream_name] = proc
-
-    return {"rtsp_url": rtsp_url}
+    return {"rtsp_url": public_rtsp_url}
 
 @app.delete("/convert/{stream_name}")
 async def stop_conversion(stream_name: str):
-    # Останавливаем процесс по имени потока
     proc = streams.get(stream_name)
     if not proc:
         raise HTTPException(status_code=404, detail="Stream not found")
