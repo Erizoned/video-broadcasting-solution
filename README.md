@@ -1,20 +1,10 @@
 ### Как запустить backend:
 
 ## 1
-
-PS C:\Users\rshal.hackathon\video-broadcasting-solution\backend> uvicorn main:app --reload --host 0.0.0.0 --port 8000,
-
-Запуск FastAPI (Сервис для генерации стрима)
-
+На пути \backend
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ## 2
-
-PS C:\Users\rshal.hackathon\video-broadcasting-solution\new_conenter> docker run -d --name nginx-rtmp -p 1935:1935 -p 80:80 tiangolo/nginx-rtmp,
-
-Поднятие RTMP сервера  - заранее написать нужно: docker rm -f nginx-rtmp;
-
-
-## 3
 
 POST http://localhost:8000/stream/start
 
@@ -24,15 +14,19 @@ POST http://localhost:8000/stream/start
   "rtmp_url": "rtmp://localhost:1935/live"
 }
 
+## 3
+
+На пути \backend: (Одной командой)
+
+docker rm -f nginx-rtmp; docker run -d --name nginx-rtmp -p 1935:1935 -p 80:80 tiangolo/nginx-rtmp
+
 ## 4
 
-PS C:\Users\rshal.hackathon\video-broadcasting-solution\backend> .\stream.bat "C:\Users\rshal.hackathon\video-broadcasting-solution\sample1.mp4" drone,
-
-Вторая часть стриминг сервиса
+На пути \backend
+.\stream.bat "C:\Users\rshal.hackathon\video-broadcasting-solution\sample1.mp4" drone
 
 
 ## 5
 
-PS C:\Users\rshal.hackathon\video-broadcasting-solution\mt> docker compose up -d,
-
-поднятие mediaMTX
+На пути \mt
+docker compose up -d,
