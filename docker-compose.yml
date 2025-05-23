@@ -13,3 +13,8 @@ services:
     container_name: rtsp-server
     ports:
       - "8554:8554"
+  rtmp-server:
+    image: tiangolo/nginx-rtmp
+    container_name: nginx-rtmp
+    ports:
+      - "1935:1935"
