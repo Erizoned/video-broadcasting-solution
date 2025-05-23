@@ -1,0 +1,30 @@
+.stream-grid-container {
+  padding: 1rem 5%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.stream-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.end-of-content {
+  text-align: center;
+  padding: 2rem 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .stream-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  
+  .stream-grid-container {
+    padding: 1rem;
+  }
+} 
