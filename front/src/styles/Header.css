@@ -3,7 +3,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 5%;
-  background-color: white;
+  background-color: #dfeffe !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: fixed;
   width: 100%;
@@ -43,11 +43,7 @@
   transition: all 0.3s ease;
 }
 
-.login-btn {
-  background: none;
-  border: 1px solid #2563eb;
-  color: #2563eb;
-}
+
 
 .signup-btn {
   background: #2563eb;
@@ -62,6 +58,12 @@
 
 .signup-btn:hover {
   background: #1d4ed8;
+}
+
+.site-logo {
+  height: 50px;
+  width: auto;
+  display: block;
 }
 
 @media (max-width: 768px) {
