@@ -1,12 +1,25 @@
-### Как запустить backend:
-
-## 1
-На пути \backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+## 1 
+В любой директории
+docker rm -f nginx-rtmp
+docker run -d --name nginx-rtmp -p 1935:1935 -p 80:80 tiangolo/nginx-rtmp
 
 ## 2
+В директории /backend
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-POST http://localhost:8000/stream/start
+## 3
+В директории /backend
+.\stream.bat "C:\Users\{user}\Videos\sample1.mp4" sample1
+
+
+## 4
+В директории /mt
+docker compose down
+docker compose up -d
+uvicorn converter:app --reload --host 0.0.0.0 --port 8001
+
+## 5
+POST http://localhost:8000/stream/start (если в этом есть надобность)
 
 {
   "video_path": "C:\\Users\\rshal\\.hackathon\\video-broadcasting-solution\\sample1.mp4",
@@ -14,19 +27,8 @@ POST http://localhost:8000/stream/start
   "rtmp_url": "rtmp://localhost:1935/live"
 }
 
-## 3
-
-На пути \backend: (Одной командой)
-
-docker rm -f nginx-rtmp; docker run -d --name nginx-rtmp -p 1935:1935 -p 80:80 tiangolo/nginx-rtmp
-
-## 4
-
-На пути \backend
-.\stream.bat "C:\Users\rshal.hackathon\video-broadcasting-solution\sample1.mp4" drone
-
-
-## 5
-
-На пути \mt
-docker compose up -d,
+## 6
+POST http://localhost:8001/register/stream
+{
+  "rtmp_source": "ссылка на rtmp"
+}
