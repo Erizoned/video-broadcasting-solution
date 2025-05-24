@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import subprocess
 import tempfile
 import os
+from fastapi.responses import RedirectResponse
 
 app = FastAPI()
 
@@ -16,39 +17,59 @@ class StreamRegistration(BaseModel):
 
 @app.post("/register-stream")
 async def register_stream(req: StreamRegistration):
-    # 1. Берем RTMP URL из запроса
-    rtmp_source = req.rtmp_source.strip()
+    # 1. Получаем исходный RTMP URL от пользователя
+    rtmp_source_input = req.rtmp_source.strip()
+
+    # 2. Если пользователь передал localhost или 127.0.0.1, 
+    #    заменяем их на имя контейнера nginx-rtmp, чтобы внутри Docker-сети MediaMTX мог достучаться
+    #    (не говнокод, а настройка сетевого окружения Docker)
+    local_pattern = re.compile(r'^(rtmp://)(localhost|127\.0\.0\.1)(:\d+)?(/live/[^/]+)$')
+    m_local = local_pattern.match(rtmp_source_input)
+    if m_local:
+        prefix, _, port, path = m_local.groups()
+        port = port or ":1935"  # если порт не указан, по умолчанию 1935
+        rtmp_source = f"{prefix}nginx-rtmp{port}{path}"
+    else:
+        # для всех остальных источников оставляем URL без изменений
+        rtmp_source = rtmp_source_input
+
+    # 3. Проверяем итоговый RTMP URL и извлекаем stream_key
     m = re.match(r"^rtmp://[^/]+/live/([^/]+)$", rtmp_source)
     if not m:
         raise HTTPException(400, detail="rtmp_source должен быть вида rtmp://<host>/live/<stream_key>")
     stream_key = m.group(1)
 
-    # 2. Формируем имя пути и RTSP URL
+    # 4. Формируем путь (live/<stream_key>) и итоговый RTSP URL для клиента
     path_name = f"live/{stream_key}"
     rtsp_url = f"rtsp://localhost:8554/{path_name}"
 
-    # 3. Готовим тело запроса к MediaMTX
+    # 5. Готовим тело запроса к MediaMTX
     payload = {
-        "source": rtmp_source,
+        "source": rtmp_source,           # используем уже скорректированный URL
         "sourceOnDemand": True
     }
 
-    # 4. Отправляем запрос на добавление пути
+    # 6. Отправляем запрос на регистрацию пути в MediaMTX
     url = f"{MEDIA_MTX_API}/{path_name}"
     async with httpx.AsyncClient() as client:
         resp = await client.post(url, json=payload)
 
-    # 5. Логгируем и обрабатываем ошибку
+    # 7. Обрабатываем возможную ошибку от MediaMTX
     if resp.status_code != 200:
-        print(f"[ERROR] MediaMTX registration failed. URL: {url}, Status: {resp.status_code}, Response: {resp.text}")
+        print(
+            "[ERROR] MediaMTX registration failed.",
+            f"URL: {url}",
+            f"Status: {resp.status_code}",
+            f"Response: {resp.text}"
+        )
         raise HTTPException(
             500,
             detail=f"Ошибка регистрации в MediaMTX: {resp.status_code} {resp.text}"
         )
 
-    # 6. Успех
+    # 8. Успешный ответ — возвращаем клиенту вводимый RTMP и сформированный RTSP URL
     return {
-        "rtmp_source": rtmp_source,
+        "rtmp_source": rtmp_source_input,  # показываем исходный URL, как его ввёл пользователь
         "rtsp_url": rtsp_url,
         "status": "registered"
     }
@@ -145,20 +166,12 @@ async def health():
 
 @app.get("/streams/{stream_key}/preview")
 async def preview(stream_key: str):
-    rtsp = f"rtsp://localhost:8554/live/{stream_key}"
-    cmd = [
-        "ffmpeg",
-        "-rtsp_transport", "tcp", "-i", rtsp,
-        "-t", "5",
-        "-c", "copy",
-        "-f", "mpegts",
-        "pipe:1"
-    ]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    data, err = proc.communicate(timeout=10)
-    if proc.returncode != 0:
-        raise HTTPException(500, f"FFmpeg failed: {err.decode(errors='ignore')}")
-    return Response(content=data, media_type="video/MP2T")
+    """
+    Вместо запуска ffmpeg возвращаем клиенту URL HLS-плейлиста,
+    в котором уже держатся последние 5 секунд (segments=5, duration=1s).
+    """
+    playlist_url = f"http://localhost:8888/hls/live/{stream_key}/index.m3u8"
+    return RedirectResponse(playlist_url)
 
 @app.get("/streams/{stream_key}/snapshot")
 async def snapshot(stream_key: str):

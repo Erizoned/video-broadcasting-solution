@@ -1,12 +1,23 @@
-version: '3'
+version: '3.8'
 services:
+  nginx-rtmp:
+    image: tiangolo/nginx-rtmp
+    container_name: nginx-rtmp
+    ports:
+      - "1935:1935"   # RTMP наружу
+      - "80:80"       # HTTP (статические страницы)
+    networks:
+      - streaming
+
   mediamtx:
     image: bluenviron/mediamtx:latest-ffmpeg
     container_name: mediamtx
+    depends_on:
+      - nginx-rtmp
     volumes:
       - ./mediamtx.yml:/mediamtx.yml:ro
     ports:
-      - "8554:8554"   # RTSP
+      - "8554:8554"   # RTSP наружу
       - "9997:9997"   # HTTP-API
     networks:
       - streaming
