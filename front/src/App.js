@@ -7,13 +7,10 @@ import './App.css';
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<MainPage />} />
-          <Route path="/stream/:streamId" element={<StreamPage />} />
-          {/* Add more routes here as needed */}
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<MainPage />} />
+        <Route path="/streams/:streamName" element={<StreamPage />} />
+      </Routes>
     </Router>
   );
 }

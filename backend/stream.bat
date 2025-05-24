@@ -10,10 +10,10 @@ if "%KEY%"=="" set KEY=drone
 
 echo Starting stream for video: %VIDEO% with key: %KEY%
 
-echo FPS set to 15
+echo FPS set to 60
 
 ffmpeg -re -stream_loop -1 -i "%VIDEO%" ^
--vf "fps=15" ^
+-vf "fps=60" ^
 -c:v libx264 -preset veryfast -tune zerolatency ^
 -c:a aac -ar 44100 -b:a 128k ^
 -f flv "rtmp://127.0.0.1/live/%KEY%"

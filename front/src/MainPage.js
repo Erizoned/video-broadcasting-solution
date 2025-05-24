@@ -1,11 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import StreamGrid from './components/StreamGrid';
 import HeroPattern from './components/HeroPattern';
+import { streamService } from './services/api';
 import './styles/MainPage.css';
 
 function MainPage() {
+  const [streams, setStreams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('All');
+
+  useEffect(() => {
+    const fetchStreams = async () => {
+      try {
+        const data = await streamService.getAllStreams();
+        setStreams(data);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch streams. Please try again later.');
+        setLoading(false);
+      }
+    };
+
+    fetchStreams();
+  }, []);
+
+  const filteredStreams = activeFilter === 'All' 
+    ? streams 
+    : streams.filter(stream => stream.category === activeFilter);
+
   return (
     <div className="main-page">
       <Header />
@@ -45,14 +70,45 @@ function MainPage() {
             <span className="live-indicator">LIVE</span>
           </div>
           <div className="stream-filters">
-            <button className="filter-btn active">All</button>
-            <button className="filter-btn">Gaming</button>
-            <button className="filter-btn">Music</button>
-            <button className="filter-btn">Just Chatting</button>
-            <button className="filter-btn">Education</button>
+            <button 
+              className={`filter-btn ${activeFilter === 'All' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('All')}
+            >
+              All
+            </button>
+            <button 
+              className={`filter-btn ${activeFilter === 'Gaming' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('Gaming')}
+            >
+              Gaming
+            </button>
+            <button 
+              className={`filter-btn ${activeFilter === 'Music' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('Music')}
+            >
+              Music
+            </button>
+            <button 
+              className={`filter-btn ${activeFilter === 'Just Chatting' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('Just Chatting')}
+            >
+              Just Chatting
+            </button>
+            <button 
+              className={`filter-btn ${activeFilter === 'Education' ? 'active' : ''}`}
+              onClick={() => setActiveFilter('Education')}
+            >
+              Education
+            </button>
           </div>
         </div>
-        <StreamGrid />
+        {loading ? (
+          <div className="loading-state">Loading streams...</div>
+        ) : error ? (
+          <div className="error-state">{error}</div>
+        ) : (
+          <StreamGrid streams={filteredStreams} />
+        )}
       </section>
 
       {/* Features Section */}
