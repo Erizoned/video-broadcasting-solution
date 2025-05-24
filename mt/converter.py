@@ -50,3 +50,64 @@ async def register_stream(req: StreamRegistration):
         "status": "registered"
     }
 
+@app.get("/streams/{stream_key}")
+async def get_stream_info(stream_key: str):
+    """
+    Get status and stats for a specific stream_key.
+    """
+    path_name = f"live/{stream_key}"
+    url = f"http://localhost:9997/v3/paths/get/{path_name}"
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url)
+
+    if resp.status_code == 404:
+        raise HTTPException(404, detail=f"Stream '{stream_key}' not found")
+    if resp.status_code != 200:
+        # log full response
+        print(f"[ERROR] MediaMTX GET failed. URL: {url}, Status: {resp.status_code}, Body: {resp.text}")
+        raise HTTPException(500, detail=f"Error fetching stream info: {resp.status_code}")
+
+    info = resp.json()
+    return {
+        "stream_key": stream_key,
+        "status": "running" if info.get("ready") else "stopped",
+        "ready_time": info.get("readyTime"),
+        "bytes_received": info.get("bytesReceived"),
+        "bytes_sent": info.get("bytesSent"),
+        "readers": info.get("readers"),
+        "tracks": info.get("tracks"),
+    }
+
+@app.get("/streams")
+async def list_streams():
+    """
+    Return a list of all registered RTSP streams with basic stats.
+    """
+    url = "http://localhost:9997/v3/paths/list"
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url)
+
+    if resp.status_code != 200:
+        print(f"[ERROR] MediaMTX list failed. URL: {url}, "
+              f"Status: {resp.status_code}, Body: {resp.text}")
+        raise HTTPException(500, detail="Ошибка получения списка стримов")
+
+    data = resp.json()
+    items = data.get("items", [])
+    streams = []
+    for item in items:
+        name = item.get("name", "")
+        # ожидаем формат "live/<stream_key>"
+        stream_key = name.split("/", 1)[1] if "/" in name else name
+        streams.append({
+            "stream_key": stream_key,
+            "status": "running" if item.get("ready") else "stopped",
+            "ready_time": item.get("readyTime"),
+            "bytes_received": item.get("bytesReceived"),
+            "bytes_sent": item.get("bytesSent"),
+            "readers_count": len(item.get("readers", [])),
+            "tracks": item.get("tracks"),
+        })
+
+    return {"streams": streams}
