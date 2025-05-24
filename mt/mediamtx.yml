@@ -1,16 +1,16 @@
-# Включаем HTTP-API для управления
 api: yes
 apiAddress: :9997
 
-rtmp: no 
-
-# Отдаём RTSP на стандартном порту 8554
+rtmp: no
 rtspAddress: :8554
 
-# Проксируем любой входящий stream из RTMP в RTSP
 paths:
-  live/drone:
-    # адрес, откуда брать RTMP-поток
-    source: rtmp://host.docker.internal:1935/live/drone
-    # поднимаем source только при подключении клиента
+  # любой запрос вида rtsp://…/live/что-угодно
+  "~^live/(.+)$":
+    # подтягиваем именно ту же часть из nginx-rtmp
+    source: rtmp://host.docker.internal:1935/live/$G1
+<<<<<<< HEAD
     sourceOnDemand: yes
+=======
+    sourceOnDemand: yes
+>>>>>>> 858e24ccbcac6c96ce07effd38e4781e11a9e4e8
