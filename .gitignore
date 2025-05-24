@@ -1,0 +1,5 @@
+# Ignore all .mp4 files in the project
+*.mp4
+
+# Optional: exclude specific folder if you only want to ignore video there
+# /backend/videos/*.mp4
