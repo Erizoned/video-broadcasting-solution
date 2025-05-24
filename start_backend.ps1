@@ -1,31 +1,21 @@
-Write-Host "=== Starting backend ===" -ForegroundColor Green
+Write-Host "=== Starting services ===" -ForegroundColor Green
 
-# Path to backend
-$backendPath = Join-Path $PSScriptRoot "backend"
-Set-Location $backendPath
-
-# 1. Start uvicorn
-Write-Host "[1/5] Starting uvicorn..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000" -NoNewWindow
-
-# 2. Run nginx-rtmp via Docker
-Write-Host "[2/5] Starting nginx-rtmp container..." -ForegroundColor Cyan
+# 1. Run nginx-rtmp via Docker
+Write-Host "[1/5] Starting nginx-rtmp container..." -ForegroundColor Cyan
 docker rm -f nginx-rtmp | Out-Null
 docker run -d --name nginx-rtmp -p 1935:1935 -p 80:80 tiangolo/nginx-rtmp | Out-Null
 
-# 3. Check and start stream
-$videoPath = Join-Path $env:USERPROFILE "Documents\Github\video-broadcasting-solution\sample1.mp4"
-if (Test-Path $videoPath) {
-    Write-Host "[3/5] Starting stream with video: $videoPath" -ForegroundColor Cyan
-    .\stream.bat "$videoPath" "drone"
-} else {
-    Write-Host "[ERROR] Video file not found at: $videoPath" -ForegroundColor Red
-}
+# 2. Start uvicorn (FastAPI backend)
+Write-Host "[2/5] Starting uvicorn..." -ForegroundColor Cyan
+$backendPath = Join-Path $PSScriptRoot "backend"
+Set-Location $backendPath
+Start-Process powershell -ArgumentList "python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000" -NoNewWindow
 
-# 4. Run docker compose
+# 4. Restart MediaMTX (docker compose down/up)
+Write-Host "[4/5] Restarting MediaMTX stack..." -ForegroundColor Cyan
 $mtPath = Join-Path $PSScriptRoot "mt"
 Set-Location $mtPath
-Write-Host "[4/5] Starting docker compose..." -ForegroundColor Cyan
+docker compose down | Out-Null
 docker compose up -d | Out-Null
 
 Write-Host "=== All services started ===" -ForegroundColor Green
