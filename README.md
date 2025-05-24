@@ -1,34 +1,40 @@
-## 1 
-В любой директории
-docker rm -f nginx-rtmp
-docker run -d --name nginx-rtmp -p 1935:1935 -p 80:80 tiangolo/nginx-rtmp
+## 1 Поднять Python Сервис для симуляции RTMP потока из указанного MP4 Файла
 
-## 2
-В директории /backend
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+(На пути /backend)
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-## 3
-В директории /backend
-.\stream.bat "C:\Users\{user}\Videos\sample1.mp4" sample1
+## 2 Поднять Python Сервис для конвертации RTMP потока в RTSP (Основной API)
 
-
-## 4
-В директории /mt
-docker compose down
-docker compose up -d
+(На пути /mt)
 uvicorn converter:app --reload --host 0.0.0.0 --port 8001
 
-## 5
-POST http://localhost:8000/stream/start (если в этом есть надобность)
+## 3 Инициализация всех основных сервисов через Docker compose:
 
+(На пути /mt)
+docker compose down
+docker compose up -d
+
+# Как проверить / Начать стрим:
+
+### 1. Сделать инициализацию RTMP потока:
+
+POST http://localhost:8000/stream/start
+Пример Request Body:
+```json
 {
   "video_path": "C:\\Users\\rshal\\.hackathon\\video-broadcasting-solution\\sample1.mp4",
-  "stream_key": "drone",
+  "stream_key": "sample1",
   "rtmp_url": "rtmp://localhost:1935/live"
 }
+```
 
-## 6
-POST http://localhost:8001/register/stream
+### 2. Конвертация RTMP потока на RTSP:
+
+POST http://localhost:8001/register-stream
+Пример Request Body:
+
+```json
 {
-  "rtmp_source": "ссылка на rtmp"
+  "rtmp_source": "rtmp://localhost:1935/live/sample1"
 }
+```
