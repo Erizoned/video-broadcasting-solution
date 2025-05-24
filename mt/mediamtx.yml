@@ -4,13 +4,16 @@ apiAddress: :9997
 rtmp: no
 rtspAddress: :8554
 
-paths:
-  # любой запрос вида rtsp://…/live/что-угодно
-  "~^live/(.+)$":
-    # подтягиваем именно ту же часть из nginx-rtmp
-    source: rtmp://host.docker.internal:1935/live/$G1
-<<<<<<< HEAD
-    sourceOnDemand: yes
-=======
-    sourceOnDemand: yes
->>>>>>> 858e24ccbcac6c96ce07effd38e4781e11a9e4e8
+# Разрешаем API, метрики и RTSP-доступ для любого пользователя
+authInternalUsers:
+  - user: any
+    pass: ""      # пустой пароль
+    ips: []       # любые IP
+    permissions:
+      - action: api
+      - action: metrics
+      - action: pprof
+      - action: read      # разрешаем читать потоки
+      - action: playback  # разрешаем воспроизводить RTSP
+
+paths: {}
