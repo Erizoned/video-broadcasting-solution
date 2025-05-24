@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import subprocess
 import tempfile
 import os
+from fastapi.responses import StreamingResponse
 
 app = FastAPI()
 
@@ -144,45 +145,32 @@ async def health():
 # Чтобы грузить превью и ласт 5 секунд клип
 
 @app.get("/streams/{stream_key}/preview")
-async def preview(stream_key: str):
-    rtsp = f"rtsp://localhost:8554/live/{stream_key}"
-    cmd = [
-        "ffmpeg",
-        "-rtsp_transport", "tcp", "-i", rtsp,
-        "-t", "5",
-        "-c", "copy",
-        "-f", "mpegts",
-        "pipe:1"
-    ]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    data, err = proc.communicate(timeout=10)
-    if proc.returncode != 0:
-        raise HTTPException(500, f"FFmpeg failed: {err.decode(errors='ignore')}")
-    return Response(content=data, media_type="video/MP2T")
-
-@app.get("/streams/{stream_key}/snapshot")
-async def snapshot(stream_key: str):
+def preview(stream_key: str):
     """
-    Capture a single video frame from the RTSP stream and return it as JPEG.
+    Возвращает первые 5 секунд RTSP-потока как MPEG-TS.
     """
-    rtsp = f"rtsp://localhost:8554/live/{stream_key}"
-    # Build ffmpeg command to grab one frame and output to stdout
+    rtsp_url = f"rtsp://localhost:8554/live/{stream_key}"
     cmd = [
         "ffmpeg",
         "-rtsp_transport", "tcp",
-        "-i", rtsp,
-        "-frames:v", "1",
-        "-f", "image2",
-        "pipe:1"
+        "-i", rtsp_url,
+        "-t", "5",           # длительность клипа
+        "-c", "copy",        # не перекодируем
+        "-f", "mpegts",      # контейнер MPEG-TS
+        "pipe:1"             # выводим в stdout
     ]
-    # Launch ffmpeg and capture stdout/stderr
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
     try:
-        data, err = proc.communicate(timeout=5)  # give ffmpeg up to 5 seconds
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        raise HTTPException(504, "Timeout capturing snapshot")
-    if proc.returncode != 0:
-        raise HTTPException(500, f"FFmpeg failed: {err.decode(errors='ignore')}")
-    # Return the JPEG image
-    return Response(content=data, media_type="image/jpeg")
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="ffmpeg не найден в PATH")
+
+    # StreamingResponse автоматически завершится, когда FFmpeg закончит писать
+    return StreamingResponse(
+        proc.stdout,
+        media_type="video/mp2t"
+    )
