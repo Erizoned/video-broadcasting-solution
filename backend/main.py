@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 import subprocess
-import os
+import os, time
 from typing import Dict
 
 app = FastAPI()
+processes: Dict[str, subprocess.Popen] = {}
 
 class StreamRequest(BaseModel):
     input_rtmp: str
@@ -45,47 +46,71 @@ class PublishRequest(BaseModel):
 @app.post("/stream/start")
 async def start_stream(req: PublishRequest):
     key = req.stream_key
-    # Prevent duplicate streams
-    if key in processes and processes[key].poll() is None:
-        raise HTTPException(status_code=409, detail=f"Stream '{key}' already running")
+    video = req.video_path
+    rtmp_target = f"{req.rtmp_url.rstrip('/')}/{key}"
 
-    # Build ffmpeg command to push to RTMP
+    # 1. Prevent duplicate streams
+    if key in processes and processes[key].poll() is None:
+        raise HTTPException(409, f"Stream '{key}' уже запущен")
+
+    # 2. Ensure input file exists
+    if not os.path.isfile(video):
+        raise HTTPException(400, f"Видео не найдено: {video}")
+
+    # 3. Launch ffmpeg
     ffmpeg_cmd = [
-        "ffmpeg",
-        "-re",
-        "-stream_loop", "-1",
-        "-i", req.video_path,
-        "-c", "copy",
-        "-f", "flv",
-        f"{req.rtmp_url}/{key}"
+        "ffmpeg", "-re", "-stream_loop", "-1",
+        "-i", video, "-c", "copy", "-f", "flv", rtmp_target
     ]
+    print(f"[START] FFmpeg command: {' '.join(ffmpeg_cmd)}")
     try:
         proc = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="ffmpeg not found in PATH")
+        raise HTTPException(500, "ffmpeg не найден в PATH")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(500, f"Ошибка запуска ffmpeg: {e}")
 
-    # Track ffmpeg process
+    # brief pause and health check
+    time.sleep(0.5)
+    if proc.poll() is not None:
+        err = proc.stderr.read().decode(errors='ignore').strip()
+        raise HTTPException(500, f"ffmpeg завершился сразу: {err or 'без вывода'}")
     processes[key] = proc
+    print(f"[START] FFmpeg запущен (PID={proc.pid}) для потока '{key}'")
 
-    # Also invoke the batch file to ensure Windows compatibility
-    # Assume 'stream.bat' is in the same directory as this script
+    # 4. Launch batch script
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    batch_path = os.path.join(script_dir, 'stream.bat')
+    batch_path = os.path.join(script_dir, "stream.bat")
+    if not os.path.isfile(batch_path):
+        raise HTTPException(500, f"stream.bat не найден по пути {batch_path}")
+
+    bat_cmd = ["cmd", "/c", batch_path, video, key]
+    print(f"[START] Batch command: {' '.join(bat_cmd)} (cwd={script_dir})")
     try:
         bat_proc = subprocess.Popen(
-            ['cmd', '/c', batch_path, req.video_path, req.stream_key],
+            bat_cmd,
             cwd=script_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        processes[f"{key}_bat"] = bat_proc
     except Exception as e:
-        # If batch fails, we still keep ffmpeg; report the error
-        raise HTTPException(status_code=500, detail=f"Failed to start batch script: {e}")
+        proc.terminate()
+        raise HTTPException(500, f"Не удалось запустить stream.bat: {e}")
 
-    return {"message": f"Stream '{key}' started at {req.rtmp_url}/{key}"}
+    processes[f"{key}_bat"] = bat_proc
+
+    # 5. Wait 2 seconds then capture last 5 lines of batch output
+    time.sleep(2)
+    out = bat_proc.stdout.read() or b""
+    err = bat_proc.stderr.read() or b""
+    combined = (out + err).decode(errors='ignore').splitlines()
+    last_lines = combined[-5:]
+
+    print(f"[START] stream.bat (PID={bat_proc.pid}) запущен для потока '{key}'")
+    return {
+        "message": f"Stream '{key}' запущен на {rtmp_target}",
+        "batch_logs": last_lines
+    }
 
 @app.delete("/stream/stop")
 async def stop_stream(stream_key: str = Query(..., description="stream key")):
