@@ -5,11 +5,7 @@ from pydantic import BaseModel
 import subprocess
 import tempfile
 import os
-<<<<<<< HEAD
-from fastapi.responses import RedirectResponse
-=======
 from fastapi.responses import StreamingResponse
->>>>>>> 016d907698f313891efdd56b019889d8a0ab434c
 
 app = FastAPI()
 
@@ -167,22 +163,8 @@ async def health():
     
 
 # Чтобы грузить превью и ласт 5 секунд клип
-
 @app.get("/streams/{stream_key}/preview")
-<<<<<<< HEAD
-async def preview(stream_key: str):
-    """
-    Вместо запуска ffmpeg возвращаем клиенту URL HLS-плейлиста,
-    в котором уже держатся последние 5 секунд (segments=5, duration=1s).
-    """
-    playlist_url = f"http://localhost:8888/hls/live/{stream_key}/index.m3u8"
-    return RedirectResponse(playlist_url)
-
-@app.get("/streams/{stream_key}/snapshot")
-async def snapshot(stream_key: str):
-=======
 def preview(stream_key: str):
->>>>>>> 016d907698f313891efdd56b019889d8a0ab434c
     """
     Возвращает первые 5 секунд RTSP-потока как MPEG-TS.
     """
