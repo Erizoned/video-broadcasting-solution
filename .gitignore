@@ -1,10 +1,58 @@
+# Python bytecode
+*.pyc
+**/*.pyc
+*.pyo
+*.pyd
+__pycache__/
+**/__pycache__/
+
+# Virtual environments
 .venv/
 venv/
-# Ignore all .mp4 files in the project
+
+# VSCode / IDE configs (опционально)
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+**/*.log
+*.tmp
+
+# Video files
 *.mp4
 
-# Optional: exclude specific folder if you only want to ignore video there
-# /backend/videos/*.mp4
-*.pyc
-/mt/__pycache__
-__pycache__/
+# Optional: compiled C extensions
+*.so
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# MyPy and Pyre type checkers
+.mypy_cache/
+.pyre/
+
+# Coverage reports
+htmlcov/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# pytest
+.pytest_cache/
+
+# build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# pip tools
+pip-log.txt
+pip-delete-this-directory.txt

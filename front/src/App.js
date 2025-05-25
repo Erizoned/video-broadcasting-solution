@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MainPage from './MainPage';
-import StreamPage from './pages/StreamPage';
+import LogPage from './LogPage';
 import './App.css';
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<MainPage />} />
-          <Route path="/stream/:streamId" element={<StreamPage />} />
+          <Route path="/logs" element={<LogPage />} />
           {/* Add more routes here as needed */}
         </Routes>
       </div>
