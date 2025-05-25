@@ -1,5 +1,11 @@
 # How to run
 
+Перед всеми операциями, нужно клонироватьт репозиторий:
+
+```bash
+git clone https://github.com/Erizoned/video-broadcasting-solution.git
+```
+
 ## 1. Установите ffplay / VLC
 
 Это нужно чтобы смотреть трансиляцию с RTSP потока данных
