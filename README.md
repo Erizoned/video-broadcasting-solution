@@ -50,7 +50,7 @@ Request Body:
 
 (На пути /backend)
 ```bash
-pytonh -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+pytonh -m uvicorn converter:app --reload --host 0.0.0.0 --port 8001
 ```
 Основной API Endpoint для получения RTSP потока данных с RTMP:
 
