@@ -22,12 +22,13 @@ POST http://localhost:8000/stream/start
 Пример Request Body:
 ```json
 {
-  "video_path": "C:\\Users\\rshal\\.hackathon\\video-broadcasting-solution\\sample1.mp4",
+  "video_path": "(путь до файла)",
   "stream_key": "sample1",
   "rtmp_url": "rtmp://localhost:1935/live"
 }
 ```
-
+Пример пути до файла: "C:\\Users\\rshal\\.hackathon\\video-broadcasting-solution\\sample1.mp4"
+stream_key: ключ, обозначающий стрим
 ### 2. Конвертация RTMP потока на RTSP:
 
 POST http://localhost:8001/register-stream
@@ -38,4 +39,5 @@ POST http://localhost:8001/register-stream
   "rtmp_source": "rtmp://localhost:1935/live/sample1"
 }
 ```
-Выдаваемая RTSP ссылка работает не сразу, после вставки ссылки в VLC нужно подождать примерно 20 секунд и поток запустится
+
+Выдаваемая RTSP ссылка (rtsp_url) работает не сразу, после вставки ссылки в VLC нужно подождать примерно 20 секунд и поток запустится

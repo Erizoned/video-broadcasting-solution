@@ -11,9 +11,8 @@ app = FastAPI()
 processes: Dict[str, subprocess.Popen] = {}
 
 class PublishRequest(BaseModel):
-    video_path: str               # Локальный путь к видеофайлу
-    stream_key: str = "drone"   # Ключ потока (часть URL)
-    rtmp_url: str = "rtmp://localhost/live"  # Базовый RTMP-адрес
+    video_path: str             # Локальный путь к видеофайлу
+    stream_key: str = "drone"  # Ключ потока (часть URL)
 
 @app.post("/stream/start")
 async def start_stream(req: PublishRequest):
@@ -21,10 +20,13 @@ async def start_stream(req: PublishRequest):
     Запускает два процесса:
     1) FFmpeg читает видео и публикует его в RTMP-сервер (loop).
     2) stream.bat выполняет аналогичную публикацию (для совместимости).
+
+    RTMP URL жёстко задан в коде.
     """
     key = req.stream_key
     video = req.video_path
-    target = f"{req.rtmp_url.rstrip('/')}/{key}"
+    # Базовый RTMP-адрес зашит в коде
+    target = f"rtmp://localhost:1935/live/{key}"
 
     # 1. Проверка дублирования
     if key in processes and processes[key].poll() is None:
@@ -40,13 +42,17 @@ async def start_stream(req: PublishRequest):
         "-i", video, "-c", "copy", "-f", "flv", target
     ]
     try:
-        proc = subprocess.Popen(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            ffmpeg_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
     except FileNotFoundError:
         raise HTTPException(500, "ffmpeg не найден в PATH")
     except Exception as e:
         raise HTTPException(500, f"Ошибка запуска ffmpeg: {e}")
 
-    # Небольшая задержка и проверка, что процесс не завершился сразу
+    # Короткая задержка и проверка, что процесс не упал сразу
     time.sleep(0.5)
     if proc.poll() is not None:
         err = proc.stderr.read().decode(errors='ignore').strip()
@@ -54,7 +60,7 @@ async def start_stream(req: PublishRequest):
 
     processes[key] = proc
 
-    # 4. Запуск дополнительного скрипта stream.bat 
+    # 4. Запуск дополнительного скрипта stream.bat
     script_dir = os.path.dirname(__file__)
     batch_path = os.path.join(script_dir, "stream.bat")
     if not os.path.isfile(batch_path):
@@ -75,7 +81,7 @@ async def start_stream(req: PublishRequest):
 
     processes[f"{key}_bat"] = bat_proc
 
-    # 5. Сбор логов для отладки
+    # 5. Сбор последних строк логов batch-процесса для отладки
     time.sleep(2)
     out = bat_proc.stdout.read() or b""
     err = bat_proc.stderr.read() or b""
@@ -86,12 +92,11 @@ async def start_stream(req: PublishRequest):
         "batch_logs": logs
     }
 
-# Остановка RTMP стрима 
 @app.delete("/stream/stop")
 async def stop_stream(stream_key: str = Query(..., description="Stream key")):
     """
     Останавливает связанные с stream_key процессы:
-    - основный ffmpeg
+    - основной ffmpeg
     - вспомогательный batch
     """
     # Остановка ffmpeg
@@ -112,12 +117,10 @@ async def stop_stream(stream_key: str = Query(..., description="Stream key")):
 
     return {"message": f"Stream '{stream_key}' остановлен"}
 
-
-#Статус стрима
 @app.get("/stream/status")
 async def stream_status(stream_key: str = Query(..., description="Stream key")):
     """
-    Возвращает статус: 'running' если процесс жив, иначе 'stopped'.
+    Возвращает статус процесса: 'running' или 'stopped'.
     """
     proc = processes.get(stream_key)
     return {
