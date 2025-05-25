@@ -54,7 +54,7 @@ async def log_requests(request: Request, call_next):
         logger.error(f"‼ Exception on {request.method} {request.url.path}: {e}")
         raise
 
-
+# Регистрация стрима
 @app.post("/stream/convert")
 async def register_stream(req: StreamRegistration):
     logger.info(f"Start converting stream: {req.rtmp_source}")
@@ -88,7 +88,7 @@ async def register_stream(req: StreamRegistration):
     logger.info(f"Stream registered: {key}")
     return {"rtmp_source": req.rtmp_source, "rtsp_url": rtsp_url, "status": "registered"}
 
-
+# Получение информации о стриме
 @app.get("/streams/{stream_key}")
 async def get_stream_info(stream_key: str):
     logger.info(f"Fetch info for stream: {stream_key}")
@@ -136,7 +136,7 @@ async def get_stream_info(stream_key: str):
     logger.info(f"Info returned for {stream_key}: {result}")
     return result
 
-
+# Получение списка стримов
 @app.get("/streams")
 async def list_streams():
     logger.info("List all streams")
@@ -184,7 +184,7 @@ async def list_streams():
     logger.info(f"Streams list returned ({len(result)} items)")
     return {"streams": result}
 
-
+# Проверка работоспособности MediaMTX
 @app.get("/health")
 async def health():
     logger.info("Health check")
@@ -198,7 +198,7 @@ async def health():
         logger.error(f"Health check failed: {e}")
     raise HTTPException(503, detail="MediaMTX unavailable")
 
-
+# Получение превью стрима
 @app.get("/streams/{stream_key}/preview")
 def preview(stream_key: str):
     logger.info(f"Preview request for: {stream_key}")
