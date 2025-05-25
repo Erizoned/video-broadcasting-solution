@@ -27,21 +27,8 @@ pip install -r requirements.txt
 Перейдите в директорию \backend
 и после выполните команду uvicorn main:app --host 0.0.0.0 --port 8000
 ```bash
-cd bachend
+cd backend
 python -m uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-после запуска, чтобы получить RTMP поток данных с видео (заранее скаченный) вы должны отправить POST запрос:
-
-POST http://localhost:8000/stream/start
-
-Request Body:
-
-```json
-{
-  "video_path": "путь_к_видео", // Пожалуйста, не забывайте экранизировать \
-  "stream_key": "название_стрим" 
-}
 ```
 
 ## 4. Запуск RTMP -> RTSP конвертера (описанный в ТЗ)
@@ -52,34 +39,6 @@ Request Body:
 ```bash
 pytonh -m uvicorn converter:app --reload --host 0.0.0.0 --port 8001
 ```
-Основной API Endpoint для получения RTSP потока данных с RTMP:
-
-POST http://localhost:8001/stream/convert
-
-Request Body:
-```json
-{
-  "rtmp_source": "<ссылка на rtmp поток данных>" // пример: rtmp://localhost:1935/live/sample1
-}
-```
-
-На что в ответ вы получите 
-
-```json
-{
-    "rtmp_source": "rtmp://localhost:1935/live/sample1",
-    "rtsp_url": "rtsp://localhost:8554/live/sample1",
-    "status": "registered"
-}
-```
-
-и по rtsp_url будет доступен RTSP поток данных (который сконвертирован с RTMP)
-#### ⚠️ ВАЖНО!!!
-
-После отправки запроса на `POST /stream/convert`, **вы сразу получите RTSP-ссылку**, но:
-> **Потоку требуется ~15–20 секунд на инициализацию.**
-Перед тем как открывать ссылку в VLC, FFplay или другом RTSP-клиенте, **подождите не менее 15–20 секунд**, чтобы MediaMTX успел инициализировать поток и начать ретрансляцию.
-Иначе — клиент может выдать ошибку подключения, потому что поток ещё не готов.
 
 Также в данном API есть много дополнительных функций, например:
 - http://localhost:8001/streams // Получение всех стримов
@@ -124,3 +83,51 @@ npm install
 ```bash
 npm start
 ```
+
+
+## Тестироваание проекта:
+
+### 1. Генерация RTMP потока: 
+Если у вас нету RTMP потока для теста API, вы можете отправить запрос на
+POST http://localhost:8000/stream/start
+
+Request Body:
+
+```json
+{
+  "video_path": "путь_к_видео", // Пожалуйста, не забывайте экранизировать \
+  "stream_key": "название_стрим" 
+}
+```
+
+На что вы получите путь на локальный RTMP (Для тестирования основного конвертера)
+
+### 2. Тестирование RTMP -> RTSP конвертера
+Основной API Endpoint для получения RTSP потока данных с RTMP:
+
+POST http://localhost:8001/stream/convert
+
+Request Body:
+```json
+{
+  "rtmp_source": "<ссылка на rtmp поток данных>" // пример: rtmp://localhost:1935/live/sample1
+}
+```
+
+На что в ответ вы получите 
+
+```json
+{
+    "rtmp_source": "rtmp://localhost:1935/live/sample1",
+    "rtsp_url": "rtsp://localhost:8554/live/sample1",
+    "status": "registered"
+}
+```
+
+и по rtsp_url будет доступен RTSP поток данных (который сконвертирован с RTMP)
+#### ⚠️ ВАЖНО!!!
+
+После отправки запроса на `POST /stream/convert`, **вы сразу получите RTSP-ссылку**, но:
+> **Потоку требуется ~15–20 секунд на инициализацию.**
+Перед тем как открывать ссылку в VLC, FFplay или другом RTSP-клиенте, **подождите не менее 15–20 секунд**, чтобы MediaMTX успел инициализировать поток и начать ретрансляцию.
+Иначе — клиент может выдать ошибку подключения, потому что поток ещё не готов.
