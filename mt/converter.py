@@ -162,7 +162,7 @@ async def list_streams():
             "status": "running" if item.get("ready") else "stopped",
             "ready_time": item.get("readyTime"),
             "bytes_received": item.get("bytesReceived"),
-            "packets_sent": item.get("packetsSent"),
+            "bytes_sent": item.get("bytesSent"),
             "source": item.get("source"),
             "readers_count": len(readers),
             "protocol_counts": protocol_counts,
