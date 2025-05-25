@@ -28,7 +28,7 @@ pip install -r requirements.txt
 и после выполните команду uvicorn main:app --host 0.0.0.0 --port 8000
 ```bash
 cd bachend
-uvicorn main:app --host 0.0.0.0 --port 8000
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 после запуска, чтобы получить RTMP поток данных с видео (заранее скаченный) вы должны отправить POST запрос:
@@ -49,8 +49,9 @@ Request Body:
 По ТЗ, это основной сервис который принимает RTMP
 
 (На пути /backend)
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
+```bash
+pytonh -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 Основной API Endpoint для получения RTSP потока данных с RTMP:
 
 POST http://localhost:8001/stream/convert
