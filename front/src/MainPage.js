@@ -45,7 +45,8 @@ function StreamCardRelevant({ stream }) {
       gap: 12,
       border: `1.5px solid ${statusBg}`,
       transition: 'border 0.2s',
-      maxWidth: 700,
+      maxWidth: 1000,
+      minWidth: 900,
       marginLeft: 'auto',
       marginRight: 'auto',
     }}>
@@ -58,7 +59,7 @@ function StreamCardRelevant({ stream }) {
         }}>{stream.status === 'running' ? 'Live' : 'Stopped'}</span>
         <span style={{marginLeft: 'auto', fontSize: 13, color: '#6b7280'}}>Source: <span style={{color:'#23272f'}}>{typeof stream.source === 'string' ? stream.source : '-'}</span></span>
       </div>
-      <div style={{display: 'flex', gap: 32, flexWrap: 'wrap', marginTop: 8}}>
+      <div style={{display: 'flex', gap: 32, flexWrap: 'nowrap', marginTop: 8}}>
         <div style={{minWidth: 120}}>
           <div style={{fontSize: 13, color: '#6b7280'}}>Bytes Received</div>
           <div style={{fontWeight: 600, fontSize: 16}}>{formatBytes(stream.bytes_received)}</div>
@@ -83,18 +84,6 @@ function StreamCardRelevant({ stream }) {
               : <span style={{color:'#9ca3af'}}>—</span>}
           </div>
         </div>
-        <div style={{minWidth: 120}}>
-          <div style={{fontSize: 13, color: '#6b7280'}}>Protocols</div>
-          <div style={{fontWeight: 600, fontSize: 16, display:'flex', gap:6, flexWrap:'wrap'}}>
-            {stream.protocol_counts && typeof stream.protocol_counts === 'object' && Object.keys(stream.protocol_counts).length > 0
-              ? Object.entries(stream.protocol_counts).map(([proto, count]) => (
-                  <span key={proto} style={{
-                    background: '#f3f4f6', color: '#23272f', borderRadius: 6, padding: '2px 8px', fontSize: 13, fontWeight: 500, border: '1px solid #e5e7eb'
-                  }}>{proto}: {count}</span>
-                ))
-              : <span style={{color:'#9ca3af'}}>—</span>}
-          </div>
-        </div>
         <div style={{minWidth: 180}}>
           <div style={{fontSize: 13, color: '#6b7280'}}>Started</div>
           <div style={{fontWeight: 600, fontSize: 15}}>{formatTime(stream.ready_time)}</div>
@@ -108,8 +97,11 @@ function MainPage() {
   const [streams, setStreams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filter, setFilter] = useState('all'); // all | online | offline
+  const [sortOrder, setSortOrder] = useState('onlineFirst'); // onlineFirst | offlineFirst | alpha | viewers | startedNew | startedOld | bytesReceived | bytesSent | bytesSentMin
 
   useEffect(() => {
+    let intervalId;
     const fetchStreams = async () => {
       try {
         const response = await fetch('http://localhost:8001/streams');
@@ -122,7 +114,47 @@ function MainPage() {
       }
     };
     fetchStreams();
+    intervalId = setInterval(fetchStreams, 3000);
+    return () => clearInterval(intervalId);
   }, []);
+
+  // Фильтрация по кнопкам
+  let filteredStreams = streams;
+  if (filter === 'online') {
+    filteredStreams = filteredStreams.filter(s => s.status === 'running');
+  } else if (filter === 'offline') {
+    filteredStreams = filteredStreams.filter(s => s.status !== 'running');
+  }
+
+  // Сортировка по выбранному порядку
+  let sortedStreams = [...filteredStreams];
+  if (sortOrder === 'onlineFirst') {
+    sortedStreams.sort((a, b) => (b.status === 'running') - (a.status === 'running'));
+  } else if (sortOrder === 'offlineFirst') {
+    sortedStreams.sort((a, b) => (a.status === 'running') - (b.status === 'running'));
+  } else if (sortOrder === 'alpha') {
+    sortedStreams.sort((a, b) => a.stream_key.localeCompare(b.stream_key));
+  } else if (sortOrder === 'viewers') {
+    sortedStreams.sort((a, b) => (b.readers_count || 0) - (a.readers_count || 0));
+  } else if (sortOrder === 'startedNew') {
+    sortedStreams.sort((a, b) => {
+      const ta = a.ready_time ? new Date(a.ready_time).getTime() : 0;
+      const tb = b.ready_time ? new Date(b.ready_time).getTime() : 0;
+      return tb - ta;
+    });
+  } else if (sortOrder === 'startedOld') {
+    sortedStreams.sort((a, b) => {
+      const ta = a.ready_time ? new Date(a.ready_time).getTime() : 0;
+      const tb = b.ready_time ? new Date(b.ready_time).getTime() : 0;
+      return ta - tb;
+    });
+  } else if (sortOrder === 'bytesReceived') {
+    sortedStreams.sort((a, b) => (b.bytes_received || 0) - (a.bytes_received || 0));
+  } else if (sortOrder === 'bytesSent') {
+    sortedStreams.sort((a, b) => (b.bytes_sent || 0) - (a.bytes_sent || 0));
+  } else if (sortOrder === 'bytesSentMin') {
+    sortedStreams.sort((a, b) => (a.bytes_sent || 0) - (b.bytes_sent || 0));
+  }
 
   return (
     <div className="main-page">
@@ -133,25 +165,7 @@ function MainPage() {
         <HeroPattern />
         <div className="hero-content">
           <h1>Professional Video Broadcasting Made Simple</h1>
-          <p>Stream your content to millions with our powerful broadcasting platform. Start your journey today!</p>
-          <div className="hero-buttons">
-            <button className="primary-btn">Start Streaming</button>
-            <button className="secondary-btn">Watch Streams</button>
-          </div>
-          <div className="hero-stats">
-            <div className="stat-item">
-              <span className="stat-number">10M+</span>
-              <span className="stat-label">Active Viewers</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-number">50K+</span>
-              <span className="stat-label">Active Streamers</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-number">99.9%</span>
-              <span className="stat-label">Uptime</span>
-            </div>
-          </div>
+          <p>Stream your content to millions with our powerful broadcasting platform. <br/> Start your journey today!</p>
         </div>
       </section>
 
@@ -163,84 +177,97 @@ function MainPage() {
             <span className="live-indicator">LIVE</span>
           </div>
         </div>
+        {/* Фильтры */}
+        <div style={{display:'flex', gap:12, margin:'18px 0 10px 0', justifyContent:'center', alignItems:'center'}}>
+          <button
+            onClick={() => setFilter('all')}
+            style={{
+              background: filter==='all' ? '#4ade80' : '#f3f4f6',
+              color: filter==='all' ? '#fff' : '#23272f',
+              border: 'none',
+              borderRadius: 8,
+              padding: '6px 18px',
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow: filter==='all' ? '0 2px 8px #4ade8033' : 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >Все</button>
+          <button
+            onClick={() => setFilter('online')}
+            style={{
+              background: filter==='online' ? '#60a5fa' : '#f3f4f6',
+              color: filter==='online' ? '#fff' : '#23272f',
+              border: 'none',
+              borderRadius: 8,
+              padding: '6px 18px',
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow: filter==='online' ? '0 2px 8px #60a5fa33' : 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >Только онлайн</button>
+          <button
+            onClick={() => setFilter('offline')}
+            style={{
+              background: filter==='offline' ? '#f87171' : '#f3f4f6',
+              color: filter==='offline' ? '#fff' : '#23272f',
+              border: 'none',
+              borderRadius: 8,
+              padding: '6px 18px',
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow: filter==='offline' ? '0 2px 8px #f8717133' : 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >Только оффлайн</button>
+          <select
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value)}
+            style={{
+              marginLeft: 24,
+              padding: '6px 14px',
+              borderRadius: 8,
+              border: '1.5px solid #e5e7eb',
+              fontWeight: 600,
+              fontSize: 15,
+              color: '#23272f',
+              background: '#f9fafb',
+              cursor: 'pointer',
+              outline: 'none',
+              boxShadow: 'none',
+              transition: 'border 0.15s',
+            }}
+          >
+            <option value="onlineFirst">Онлайн сверху</option>
+            <option value="offlineFirst">Оффлайн сверху</option>
+            <option value="alpha">По алфавиту</option>
+            <option value="viewers">По зрителям</option>
+            <option value="startedNew">По дате старта (новые)</option>
+            <option value="startedOld">По дате старта (старые)</option>
+            <option value="bytesReceived">По полученным байтам</option>
+            <option value="bytesSent">По отправленным байтам (max)</option>
+            <option value="bytesSentMin">По отправленным байтам (min)</option>
+          </select>
+        </div>
         {loading ? (
           <div className="loading-state">Загрузка стримов...</div>
         ) : error ? (
           <div className="error-state">{error}</div>
         ) : (
           <div style={{marginTop: 18}}>
-            {streams.length === 0 ? (
+            {sortedStreams.length === 0 ? (
               <div style={{color:'#6b7280', fontSize: 18, textAlign:'center', margin: 24}}>Нет активных стримов</div>
             ) : (
-              streams.map((stream) => (
+              sortedStreams.map((stream) => (
                 <StreamCardRelevant key={stream.stream_key} stream={stream} />
               ))
             )}
           </div>
         )}
-      </section>
-
-      {/* Features Section */}
-      <section className="features" id="features">
-        <div className="section-header">
-          <h2>Why Choose Us</h2>
-          <p className="section-subtitle">Everything you need to start your streaming journey</p>
-        </div>
-        <div className="features-grid">
-          <div className="feature-card">
-            <div className="feature-icon">
-              <i className="fas fa-video"></i>
-            </div>
-            <h3>High-Quality Streaming</h3>
-            <p>Broadcast in up to 4K resolution with minimal latency and adaptive bitrate streaming</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <i className="fas fa-globe"></i>
-            </div>
-            <h3>Global Reach</h3>
-            <p>Reach viewers worldwide with our distributed network and low-latency CDN</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <i className="fas fa-chart-line"></i>
-            </div>
-            <h3>Advanced Analytics</h3>
-            <p>Track viewer engagement, stream performance, and audience demographics in real-time</p>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon">
-              <i className="fas fa-shield-alt"></i>
-            </div>
-            <h3>Secure Platform</h3>
-            <p>Enterprise-grade security with DDoS protection and content encryption</p>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="how-it-works">
-        <div className="section-header">
-          <h2>How It Works</h2>
-          <p className="section-subtitle">Start streaming in three simple steps</p>
-        </div>
-        <div className="steps-container">
-          <div className="step-card">
-            <div className="step-number">1</div>
-            <h3>Create Account</h3>
-            <p>Sign up in minutes and set up your streaming profile</p>
-          </div>
-          <div className="step-card">
-            <div className="step-number">2</div>
-            <h3>Configure Stream</h3>
-            <p>Set up your stream settings and customize your channel</p>
-          </div>
-          <div className="step-card">
-            <div className="step-number">3</div>
-            <h3>Go Live</h3>
-            <p>Start broadcasting to your audience instantly</p>
-          </div>
-        </div>
       </section>
       <Footer />
     </div>

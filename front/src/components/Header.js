@@ -10,8 +10,6 @@ function Header() {
         <img src={logo} alt="Video Broadcast Logo" className="site-logo" />
       </Link>
       <div className="nav-links">
-        <Link to="/">Home</Link>
-        <Link to="/features">Features</Link>
       </div>
     </nav>
   );
