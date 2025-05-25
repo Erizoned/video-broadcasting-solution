@@ -1,0 +1,106 @@
+2025-05-25 13:52:59,160 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:52:59,533 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:52:59,535 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:02,181 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:02,487 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:02,489 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:05,286 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:05,580 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:05,581 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:08,329 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:08,596 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:08,597 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:11,372 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:11,698 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:11,700 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:14,515 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:14,873 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:14,875 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:17,546 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:17,821 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:17,822 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:20,750 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:21,025 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:21,026 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:23,821 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:24,190 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:24,191 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:26,886 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:27,158 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:27,159 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:30,805 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:31,194 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:31,197 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:33,025 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:33,296 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:33,297 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:36,086 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:36,405 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:36,406 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:39,148 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:39,423 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:39,424 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:42,189 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:42,523 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:42,524 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:45,218 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:45,487 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:45,488 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:48,247 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:48,522 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:48,523 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:51,397 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:51,668 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:51,669 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:54,431 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:54,740 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:54,741 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:57,485 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:53:57,756 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:53:57,757 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:53:59,632 INFO Request: GET http://2.133.132.170/
+2025-05-25 13:53:59,632 INFO Response: 404 http://2.133.132.170/
+2025-05-25 13:53:59,925 INFO Request: GET http://2.133.132.170/favicon.ico
+2025-05-25 13:53:59,926 INFO Response: 404 http://2.133.132.170/favicon.ico
+2025-05-25 13:54:00,601 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:00,874 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:00,875 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:03,634 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:03,980 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:03,982 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:06,763 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:07,058 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:07,059 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:09,800 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:10,123 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:10,124 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:12,912 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:13,269 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:13,270 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:16,005 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:16,445 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:16,446 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:19,052 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:19,369 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:19,370 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:22,081 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:22,379 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:22,380 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:25,176 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:25,471 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:25,472 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:28,258 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:28,609 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:28,611 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:32,142 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:32,484 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:32,486 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:35,170 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:35,467 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:35,468 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:38,202 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:38,497 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:38,498 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 13:54:41,241 INFO Request: GET http://localhost:8001/streams
+2025-05-25 13:54:41,526 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
+2025-05-25 13:54:41,528 INFO Response: 200 http://localhost:8001/streams

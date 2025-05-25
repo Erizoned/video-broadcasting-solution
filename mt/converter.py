@@ -1,11 +1,24 @@
 import re
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import subprocess
 import datetime
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+import os
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[
+        logging.FileHandler('converter.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -36,6 +49,18 @@ class PublishRequest(BaseModel):
     video_path: str
     stream_key: str = "drone"
     rtmp_url: str = "rtmp://localhost/live"
+
+
+@app.middleware('http')
+async def log_requests(request: Request, call_next):
+    logger.info(f"Request: {request.method} {request.url}")
+    try:
+        response = await call_next(request)
+        logger.info(f"Response: {response.status_code} {request.url}")
+        return response
+    except Exception as e:
+        logger.error(f"Exception: {e}")
+        raise
 
 
 @app.post("/register-stream")
@@ -113,13 +138,9 @@ async def get_stream_info(stream_key: str):
         "uptime_seconds": uptime,
         "bytes_received": info.get("bytesReceived"),
         "bytes_sent": info.get("bytesSent"),
-        "packets_received": info.get("packetsReceived"),
-        "packets_sent": info.get("packetsSent"),
         "source": info.get("source"),
-        "source_on_demand": info.get("sourceOnDemand"),
         "tracks": info.get("tracks"),
         "readers_count": len(readers),
-        "protocol_counts": proto_counts,
     }
 
 
@@ -205,3 +226,16 @@ def preview(stream_key: str):
     except FileNotFoundError:
         raise HTTPException(500, detail="ffmpeg не найден в PATH")
     return StreamingResponse(proc.stdout, media_type="video/mp2t")
+
+
+@app.get("/logs")
+async def get_logs(lines: int = 200):
+    """
+    Возвращает последние N строк из converter.log
+    """
+    log_path = os.path.join(os.path.dirname(__file__), 'converter.log')
+    if not os.path.isfile(log_path):
+        return {"logs": []}
+    with open(log_path, encoding='utf-8') as f:
+        all_lines = f.readlines()
+    return {"logs": all_lines[-lines:]}
