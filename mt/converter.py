@@ -5,8 +5,17 @@ from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 import subprocess
 import datetime
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # или ["http://localhost:3006"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Точка добавления путей в MediaMTX
 MEDIA_MTX_API = "http://localhost:9997/v3/config/paths/add"
