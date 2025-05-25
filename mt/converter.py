@@ -113,13 +113,9 @@ async def get_stream_info(stream_key: str):
         "uptime_seconds": uptime,
         "bytes_received": info.get("bytesReceived"),
         "bytes_sent": info.get("bytesSent"),
-        "packets_received": info.get("packetsReceived"),
-        "packets_sent": info.get("packetsSent"),
         "source": info.get("source"),
-        "source_on_demand": info.get("sourceOnDemand"),
         "tracks": info.get("tracks"),
         "readers_count": len(readers),
-        "protocol_counts": proto_counts,
     }
 
 
