@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
-<<<<<<< Updated upstream
 import StreamGrid from './components/StreamGrid';
 import HeroPattern from './components/HeroPattern';
 import { streamService } from './services/api';
@@ -32,29 +31,39 @@ function MainPage() {
     ? streams 
     : streams.filter(stream => stream.category === activeFilter);
 
-=======
-import StreamCard from './components/StreamCard';
-import './styles/MainPage.css';
-
-const testStreams = [
-  {
-    name: 'sample1',
-    title: 'Sample Stream 1',
-    status: 'running',
-    viewers: 42,
-    upload_bytes: 1024,
-    download_bytes: 2048,
-    tracks: [{ type: 'video' }, { type: 'audio' }]
-  }
-];
-
-const MainPage = () => {
->>>>>>> Stashed changes
   return (
     <div className="main-page">
       <Header />
+      
+      {/* Hero Section */}
+      <section className="hero">
+        <HeroPattern />
+        <div className="hero-content">
+          <h1>Professional Video Broadcasting Made Simple</h1>
+          <p>Stream your content to millions with our powerful broadcasting platform. Start your journey today!</p>
+          <div className="hero-buttons">
+            <button className="primary-btn">Start Streaming</button>
+            <button className="secondary-btn">Watch Streams</button>
+          </div>
+          <div className="hero-stats">
+            <div className="stat-item">
+              <span className="stat-number">10M+</span>
+              <span className="stat-label">Active Viewers</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-number">50K+</span>
+              <span className="stat-label">Active Streamers</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-number">99.9%</span>
+              <span className="stat-label">Uptime</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Live Streams Section */}
       <section className="live-streams">
-<<<<<<< Updated upstream
         <div className="section-header">
           <div className="section-title">
             <h2>Live Streams</h2>
@@ -162,18 +171,11 @@ const MainPage = () => {
             <h3>Go Live</h3>
             <p>Start broadcasting to your audience instantly</p>
           </div>
-=======
-        <h2>Live Streams</h2>
-        <div className="streams-grid">
-          {testStreams.map((stream) => (
-            <StreamCard key={stream.name} stream={stream} />
-          ))}
->>>>>>> Stashed changes
         </div>
       </section>
       <Footer />
     </div>
   );
-};
+}
 
 export default MainPage;
