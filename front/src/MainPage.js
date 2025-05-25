@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Header from './components/Header';
-import Footer from './components/Footer';
 import HeroPattern from './components/HeroPattern';
 import './styles/MainPage.css';
 
@@ -98,7 +97,7 @@ function MainPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all'); // all | online | offline
-  const [sortOrder, setSortOrder] = useState('onlineFirst'); // onlineFirst | offlineFirst | alpha | viewers | startedNew | startedOld | bytesReceived | bytesSent | bytesSentMin
+  const [sortOrder, setSortOrder] = useState('onlineFirst'); // onlineFirst | offlineFirst | alpha | viewers | startedNew | startedOld | bytesReceived | bytesReceivedMin | bytesSent | bytesSentMin
 
   useEffect(() => {
     let intervalId;
@@ -109,7 +108,7 @@ function MainPage() {
         setStreams(data.streams || []);
         setLoading(false);
       } catch (err) {
-        setError('Ошибка загрузки стримов');
+        setError('Error loading streams');
         setLoading(false);
       }
     };
@@ -150,6 +149,8 @@ function MainPage() {
     });
   } else if (sortOrder === 'bytesReceived') {
     sortedStreams.sort((a, b) => (b.bytes_received || 0) - (a.bytes_received || 0));
+  } else if (sortOrder === 'bytesReceivedMin') {
+    sortedStreams.sort((a, b) => (a.bytes_received || 0) - (b.bytes_received || 0));
   } else if (sortOrder === 'bytesSent') {
     sortedStreams.sort((a, b) => (b.bytes_sent || 0) - (a.bytes_sent || 0));
   } else if (sortOrder === 'bytesSentMin') {
@@ -159,15 +160,6 @@ function MainPage() {
   return (
     <div className="main-page">
       <Header />
-      
-      {/* Hero Section */}
-      <section className="hero">
-        <HeroPattern />
-        <div className="hero-content">
-          <h1>Professional Video Broadcasting Made Simple</h1>
-          <p>Stream your content to millions with our powerful broadcasting platform. <br/> Start your journey today!</p>
-        </div>
-      </section>
 
       {/* Live Streams Section */}
       <section className="live-streams">
@@ -193,7 +185,7 @@ function MainPage() {
               cursor: 'pointer',
               transition: 'all 0.15s',
             }}
-          >Все</button>
+          >All</button>
           <button
             onClick={() => setFilter('online')}
             style={{
@@ -208,7 +200,7 @@ function MainPage() {
               cursor: 'pointer',
               transition: 'all 0.15s',
             }}
-          >Только онлайн</button>
+          >Online</button>
           <button
             onClick={() => setFilter('offline')}
             style={{
@@ -223,7 +215,7 @@ function MainPage() {
               cursor: 'pointer',
               transition: 'all 0.15s',
             }}
-          >Только оффлайн</button>
+          >Offline</button>
           <select
             value={sortOrder}
             onChange={e => setSortOrder(e.target.value)}
@@ -242,25 +234,45 @@ function MainPage() {
               transition: 'border 0.15s',
             }}
           >
-            <option value="onlineFirst">Онлайн сверху</option>
-            <option value="offlineFirst">Оффлайн сверху</option>
-            <option value="alpha">По алфавиту</option>
-            <option value="viewers">По зрителям</option>
-            <option value="startedNew">По дате старта (новые)</option>
-            <option value="startedOld">По дате старта (старые)</option>
-            <option value="bytesReceived">По полученным байтам</option>
-            <option value="bytesSent">По отправленным байтам (max)</option>
-            <option value="bytesSentMin">По отправленным байтам (min)</option>
+            <option value="onlineFirst">Online First</option>
+            <option value="offlineFirst">Offline First</option>
+            <option value="alpha">Alphabetical</option>
+            <option value="viewers">Viewers</option>
+            <option value="startedNew">Started (Newest)</option>
+            <option value="startedOld">Started (Oldest)</option>
+            <option value="bytesReceived">Bytes Received (max)</option>
+            <option value="bytesReceivedMin">Bytes Received (min)</option>
+            <option value="bytesSent">Bytes Sent (max)</option>
+            <option value="bytesSentMin">Bytes Sent (min)</option>
           </select>
         </div>
         {loading ? (
-          <div className="loading-state">Загрузка стримов...</div>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 0',
+            color: '#6b7280',
+            fontSize: 18,
+            gap: 16
+          }}>
+            <div style={{
+              width: 40,
+              height: 40,
+              border: '3px solid #e5e7eb',
+              borderTop: '3px solid #60a5fa',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <div>Loading streams...</div>
+          </div>
         ) : error ? (
           <div className="error-state">{error}</div>
         ) : (
           <div style={{marginTop: 18}}>
             {sortedStreams.length === 0 ? (
-              <div style={{color:'#6b7280', fontSize: 18, textAlign:'center', margin: 24}}>Нет активных стримов</div>
+              <div style={{color:'#6b7280', fontSize: 18, textAlign:'center', margin: 24}}>No active streams</div>
             ) : (
               sortedStreams.map((stream) => (
                 <StreamCardRelevant key={stream.stream_key} stream={stream} />
@@ -269,7 +281,6 @@ function MainPage() {
           </div>
         )}
       </section>
-      <Footer />
     </div>
   );
 }

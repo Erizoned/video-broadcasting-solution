@@ -21,7 +21,7 @@ async def start_stream(req: PublishRequest):
     1) FFmpeg читает видео и публикует его в RTMP-сервер (loop).
     2) stream.bat выполняет аналогичную публикацию (для совместимости).
 
-    RTMP URL жёстко задан в коде.
+    RTMP URL задан в коде.
     """
     key = req.stream_key
     video = req.video_path

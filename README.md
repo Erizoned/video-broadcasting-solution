@@ -1,43 +1,118 @@
-## 1 Поднять Python Сервис для симуляции RTMP потока из указанного MP4 Файла
+# How to run
+
+## 1. Установите ffplay / VLC
+
+Это нужно чтобы смотреть трансиляцию с RTSP потока данных
+
+## 2. Установка зависимостей Python
+
+Backend (Основная логика) написана на Python, поэтмоу если нету Python-а, установите его и в корне проекта выполните команду:
+
+```bash
+pip install -r requirements.txt
+```
+
+## 3. Запуск FastApi (main.py) для генериации RTMP потока из видео
+
+Если у вас есть рабочий RTMP поток, то пропускайте этот пункт, а если же у вас нету RTMP потока для теста основного API (RTMP -> RTSP конверер) то вы можете воспользоваться этим сервисом
+Запуск:
+
+Перейдите в директорию \backend
+и после выполните команду uvicorn main:app --host 0.0.0.0 --port 8000
+```bash
+cd bachend
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+после запуска, чтобы получить RTMP поток данных с видео (заранее скаченный) вы должны отправить POST запрос:
+
+POST http://localhost:8000/stream/start
+
+Request Body:
+
+```json
+{
+  "video_path": "путь_к_видео", // Пожалуйста, не забывайте экранизировать \
+  "stream_key": "название_стрим" 
+}
+```
+
+## 4. Запуск RTMP -> RTSP конвертера (описанный в ТЗ)
+
+По ТЗ, это основной сервис который принимает RTMP
 
 (На пути /backend)
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-## 2 Поднять Python Сервис для конвертации RTMP потока в RTSP (Основной API)
+Основной API Endpoint для получения RTSP потока данных с RTMP:
 
-(На пути /mt)
-uvicorn converter:app --reload --host 0.0.0.0 --port 8001
+POST http://localhost:8001/stream/convert
 
-## 3 Инициализация всех основных сервисов через Docker compose:
+Request Body:
+```json
+{
+  "rtmp_source": "<ссылка на rtmp поток данных>" // пример: rtmp://localhost:1935/live/sample1
+}
+```
 
-(На пути /mt)
+На что в ответ вы получите 
+
+```json
+{
+    "rtmp_source": "rtmp://localhost:1935/live/sample1",
+    "rtsp_url": "rtsp://localhost:8554/live/sample1",
+    "status": "registered"
+}
+```
+
+и по rtsp_url будет доступен RTSP поток данных (который сконвертирован с RTMP)
+#### ⚠️ ВАЖНО!!!
+
+После отправки запроса на `POST /stream/convert`, **вы сразу получите RTSP-ссылку**, но:
+> **Потоку требуется ~15–20 секунд на инициализацию.**
+Перед тем как открывать ссылку в VLC, FFplay или другом RTSP-клиенте, **подождите не менее 15–20 секунд**, чтобы MediaMTX успел инициализировать поток и начать ретрансляцию.
+Иначе — клиент может выдать ошибку подключения, потому что поток ещё не готов.
+
+Также в данном API есть много дополнительных функций, например:
+- http://localhost:8001/streams // Получение всех стримов
+- http://localhost:8001/streams/{stream_key} // Получение детальной информации об 1 стриме
+- http://localhost:8001/streams/{stream_key}/preview // Получение последнего скриншота стрима (можно использовать под превью)
+- http://localhost:8001/health // Проверка целостности системы
+- http://localhost:8001/logs // Получение последних логов API
+
+## 5. Запуск Dokcer Compose
+
+Перейдите в директорию /mt который в корне проекта
+Далее там выполните:
+
+```bash
 docker compose down
+```
+
+После этого подожите 2-3 секунды (для того чтобы контейнеры успелись завершиться)
+Далее, запустите docker контейнер
+
+```bash
 docker compose up -d
-
-# Как проверить / Начать стрим:
-
-### 1. Сделать инициализацию RTMP потока:
-
-POST http://localhost:8000/stream/start
-Пример Request Body:
-```json
-{
-  "video_path": "(путь до файла)",
-  "stream_key": "sample1",
-  "rtmp_url": "rtmp://localhost:1935/live"
-}
-```
-Пример пути до файла: "C:\\Users\\rshal\\.hackathon\\video-broadcasting-solution\\sample1.mp4"
-stream_key: ключ, обозначающий стрим
-### 2. Конвертация RTMP потока на RTSP:
-
-POST http://localhost:8001/register-stream
-Пример Request Body:
-
-```json
-{
-  "rtmp_source": "rtmp://localhost:1935/live/sample1"
-}
 ```
 
-Выдаваемая RTSP ссылка (rtsp_url) работает не сразу, после вставки ссылки в VLC нужно подождать примерно 20 секунд и поток запустится
+## Установка Node js (для запуска фронта) и также запуск фронтенда
+
+1. Для начала установите node js
+2. Далее перейдите в директорию /front:
+
+```bash
+cd front
+```
+
+3. Далее установите зависимости:
+
+```bash
+npm install
+```
+
+4. Запуск React (Фронтенд):
+
+```bash
+npm start
+```
