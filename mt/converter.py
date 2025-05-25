@@ -55,9 +55,9 @@ async def log_requests(request: Request, call_next):
         raise
 
 
-@app.post("/register-stream")
+@app.post("/stream/convert")
 async def register_stream(req: StreamRegistration):
-    logger.info(f"Start register-stream: {req.rtmp_source}")
+    logger.info(f"Start converting stream: {req.rtmp_source}")
     # нормализуем и перенаправляем хост внутри Docker
     src = req.rtmp_source.strip()
     local_match = re.match(r"^rtmp://(localhost|127\.0\.0\.1)(:\d+)?(/live/[^/]+)$", src)

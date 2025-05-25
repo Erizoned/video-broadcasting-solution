@@ -78,18 +78,10 @@ async def start_stream(req: PublishRequest):
     except Exception as e:
         proc.terminate()
         raise HTTPException(500, f"Не удалось запустить stream.bat: {e}")
-
     processes[f"{key}_bat"] = bat_proc
 
-    # 5. Сбор последних строк логов batch-процесса для отладки
-    time.sleep(2)
-    out = bat_proc.stdout.read() or b""
-    err = bat_proc.stderr.read() or b""
-    logs = (out + err).decode(errors='ignore').splitlines()[-5:]
-
     return {
-        "message": f"Stream '{key}' запущен на {target}",
-        "batch_logs": logs
+        "message": f"Stream '{key}' запущен на {target}"
     }
 
 @app.delete("/stream/stop")
