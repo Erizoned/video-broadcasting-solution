@@ -104,3 +104,24 @@
 2025-05-25 13:54:41,241 INFO Request: GET http://localhost:8001/streams
 2025-05-25 13:54:41,526 INFO HTTP Request: GET http://localhost:9997/v3/paths/list "HTTP/1.1 200 OK"
 2025-05-25 13:54:41,528 INFO Response: 200 http://localhost:8001/streams
+2025-05-25 14:37:59,681 INFO → POST /stream/convert
+2025-05-25 14:37:59,719 INFO Start converting stream: rtmp://localhost:1935/live/sample1
+2025-05-25 14:37:59,722 INFO Redirected src to Docker network: rtmp://nginx-rtmp:1935/live/sample1
+2025-05-25 14:37:59,723 INFO Register path live/sample1 → rtsp://localhost:8554/live/sample1
+2025-05-25 14:38:00,553 INFO HTTP Request: POST http://localhost:9997/v3/config/paths/add/live/sample1 "HTTP/1.1 400 Bad Request"
+2025-05-25 14:38:00,557 ERROR MediaMTX register error 400: {"error":"path already exists"}
+2025-05-25 14:38:00,560 INFO ← 500 /stream/convert
+2025-05-25 14:40:40,036 INFO → POST /stream/convert
+2025-05-25 14:40:40,055 INFO Start converting stream: rtmp://localhost:1935/live/sample1
+2025-05-25 14:40:40,056 INFO Redirected src to Docker network: rtmp://nginx-rtmp:1935/live/sample1
+2025-05-25 14:40:40,057 INFO Register path live/sample1 → rtsp://localhost:8554/live/sample1
+2025-05-25 14:40:40,773 INFO HTTP Request: POST http://localhost:9997/v3/config/paths/add/live/sample1 "HTTP/1.1 200 OK"
+2025-05-25 14:40:40,775 INFO Stream registered: sample1
+2025-05-25 14:40:40,776 INFO ← 200 /stream/convert
+2025-05-25 14:55:19,804 INFO → POST /stream/convert
+2025-05-25 14:55:19,824 INFO Start converting stream: rtmp://localhost:1935/live/sample1
+2025-05-25 14:55:19,825 INFO Redirected src to Docker network: rtmp://nginx-rtmp:1935/live/sample1
+2025-05-25 14:55:19,826 INFO Register path live/sample1 → rtsp://localhost:8554/live/sample1
+2025-05-25 14:55:20,544 INFO HTTP Request: POST http://localhost:9997/v3/config/paths/add/live/sample1 "HTTP/1.1 200 OK"
+2025-05-25 14:55:20,546 INFO Stream registered: sample1
+2025-05-25 14:55:20,548 INFO ← 200 /stream/convert

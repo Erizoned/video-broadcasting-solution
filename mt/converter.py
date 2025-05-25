@@ -86,8 +86,12 @@ async def register_stream(req: StreamRegistration):
         raise HTTPException(500, detail=f"Ошибка регистрации: {resp.status_code} {resp.text}")
 
     logger.info(f"Stream registered: {key}")
-    return {"rtmp_source": req.rtmp_source, "rtsp_url": rtsp_url, "status": "registered"}
-
+    return {
+        "rtmp_source": req.rtmp_source,
+        "rtsp_url": rtsp_url,
+        "status": "registered",
+        "note": "ВАЖНО: После получения rtsp_url подождите 15–20 секунд перед подключением, чтобы поток успел инициализироваться"
+    }
 
 @app.get("/streams/{stream_key}")
 async def get_stream_info(stream_key: str):
