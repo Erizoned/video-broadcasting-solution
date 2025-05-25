@@ -33,11 +33,11 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000
 
 ## 4. Запуск RTMP -> RTSP конвертера (описанный в ТЗ)
 
-По ТЗ, это основной сервис который принимает RTMP
+Основной сервис по ТЗ, который конвертирует RTMP на RTSP поток данных
 
-(На пути /backend)
+(На пути /mt)
 ```bash
-pytonh -m uvicorn converter:app --reload --host 0.0.0.0 --port 8001
+python -m uvicorn converter:app --reload --host 0.0.0.0 --port 8001
 ```
 
 Также в данном API есть много дополнительных функций, например:
