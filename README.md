@@ -40,13 +40,6 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000
 python -m uvicorn converter:app --reload --host 0.0.0.0 --port 8001
 ```
 
-Также в данном API есть много дополнительных функций, например:
-- http://localhost:8001/streams // Получение всех стримов
-- http://localhost:8001/streams/{stream_key} // Получение детальной информации об 1 стриме
-- http://localhost:8001/streams/{stream_key}/preview // Получение последнего скриншота стрима (можно использовать под превью)
-- http://localhost:8001/health // Проверка целостности системы
-- http://localhost:8001/logs // Получение последних логов API
-
 ## 5. Запуск Dokcer Compose
 
 Перейдите в директорию /mt который в корне проекта
@@ -84,6 +77,14 @@ npm install
 npm start
 ```
 
+## API Функционала
+
+Также в данном API есть много дополнительных функций, например:
+- http://localhost:8001/streams // Получение всех стримов
+- http://localhost:8001/streams/{stream_key} // Получение детальной информации об 1 стриме
+- http://localhost:8001/streams/{stream_key}/preview // Получение последнего скриншота стрима (можно использовать под превью)
+- http://localhost:8001/health // Проверка целостности системы
+- http://localhost:8001/logs // Получение последних логов API
 
 ## Тестироваание проекта:
 
