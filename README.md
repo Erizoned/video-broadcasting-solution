@@ -38,3 +38,4 @@ POST http://localhost:8001/register-stream
   "rtmp_source": "rtmp://localhost:1935/live/sample1"
 }
 ```
+Выдаваемая RTSP ссылка работает не сразу, после вставки ссылки в VLC нужно подождать примерно 20 секунд и поток запустится

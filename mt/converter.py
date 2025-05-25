@@ -1,8 +1,8 @@
 import re
 import httpx
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 import subprocess
 import datetime
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,144 +19,130 @@ app.add_middleware(
 
 # Точка добавления путей в MediaMTX
 MEDIA_MTX_API = "http://localhost:9997/v3/config/paths/add"
+MEDIA_MTX_HOST = "localhost"
+MEDIA_MTX_PORT = 9997
+MEDIA_MTX_BASE = f"http://{MEDIA_MTX_HOST}:{MEDIA_MTX_PORT}/v3"
+PATHS_CONFIG = f"{MEDIA_MTX_BASE}/config/paths"
+PATHS_API    = f"{MEDIA_MTX_BASE}/paths"
+
 
 class StreamRegistration(BaseModel):
+    """Модель для регистрации RTMP→RTSP конвертации"""
     rtmp_source: str  # полный RTMP URL
+
+
+class PublishRequest(BaseModel):
+    """Модель для эмуляции RTMP-публикации видеофайла"""
+    video_path: str
+    stream_key: str = "drone"
+    rtmp_url: str = "rtmp://localhost/live"
+
 
 @app.post("/register-stream")
 async def register_stream(req: StreamRegistration):
-    rtmp_source_input = req.rtmp_source.strip()
-
-    # Заменяем localhost на nginx-rtmp внутри Docker
-    local_pattern = re.compile(r'^(rtmp://)(localhost|127\.0\.0\.1)(:\d+)?(/live/[^/]+)$')
-    m_local = local_pattern.match(rtmp_source_input)
-    if m_local:
-        prefix, _, port, path = m_local.groups()
+    """
+    Регистрирует RTMP-источник в MediaMTX для конвертации в RTSP.
+    Заменяет localhost на nginx-rtmp для Docker-среды.
+    """
+    # нормализуем и перенаправляем хост внутри Docker
+    src = req.rtmp_source.strip()
+    local_match = re.match(r"^rtmp://(localhost|127\.0\.0\.1)(:\d+)?(/live/[^/]+)$", src)
+    if local_match:
+        host, port, path = local_match.groups()
         port = port or ":1935"
-        rtmp_source = f"{prefix}nginx-rtmp{port}{path}"
-    else:
-        rtmp_source = rtmp_source_input
+        src = f"rtmp://nginx-rtmp{port}{path}"
 
-    m = re.match(r"^rtmp://[^/]+/live/([^/]+)$", rtmp_source)
+    # извлекаем ключ потока из пути
+    m = re.match(r"^rtmp://[^/]+/live/([^/]+)$", src)
     if not m:
         raise HTTPException(400, detail="rtmp_source должен быть вида rtmp://<host>/live/<stream_key>")
-    stream_key = m.group(1)
+    key = m.group(1)
 
-    path_name = f"live/{stream_key}"
+    # формируем имя и публичный RTSP URL
+    path_name = f"live/{key}"
     rtsp_url = f"rtsp://localhost:8554/{path_name}"
 
-    payload = {
-        "source": rtmp_source,
-        "sourceOnDemand": True
-    }
-    url = f"{MEDIA_MTX_API}/{path_name}"
+    # регистрируем путь в MediaMTX
+    payload = {"source": src, "sourceOnDemand": True}
     async with httpx.AsyncClient() as client:
-        resp = await client.post(url, json=payload)
-
+        resp = await client.post(f"{PATHS_CONFIG}/add/{path_name}", json=payload)
     if resp.status_code != 200:
-        print(
-            "[ERROR] MediaMTX registration failed.",
-            f"URL: {url}",
-            f"Status: {resp.status_code}",
-            f"Response: {resp.text}"
-        )
-        raise HTTPException(
-            500,
-            detail=f"Ошибка регистрации в MediaMTX: {resp.status_code} {resp.text}"
-        )
+        raise HTTPException(500, detail=f"Ошибка регистрации: {resp.status_code} {resp.text}")
 
-    return {
-        "rtmp_source": rtmp_source_input,
-        "rtsp_url": rtsp_url,
-        "status": "registered"
-    }
+    return {"rtmp_source": req.rtmp_source, "rtsp_url": rtsp_url, "status": "registered"}
+
 
 @app.get("/streams/{stream_key}")
 async def get_stream_info(stream_key: str):
     """
-    Get detailed status and stats for a specific stream_key.
+    Возвращает детальную статистику по одному RTSP-потоку.
+    Рассчитывает uptime и считает протоколы читателей.
     """
-    path_name = f"live/{stream_key}"
-    url = f"http://localhost:9997/v3/paths/get/{path_name}"
-
+    url = f"{PATHS_API}/get/live/{stream_key}"
     async with httpx.AsyncClient() as client:
         resp = await client.get(url)
-
     if resp.status_code == 404:
-        raise HTTPException(404, detail=f"Stream '{stream_key}' not found")
+        raise HTTPException(404, detail="Stream not found")
     if resp.status_code != 200:
-        print(f"[ERROR] MediaMTX GET failed. URL: {url}, Status: {resp.status_code}, Body: {resp.text}")
-        raise HTTPException(500, detail=f"Error fetching stream info: {resp.status_code}")
+        raise HTTPException(500, detail=f"MediaMTX error: {resp.status_code}")
 
     info = resp.json()
 
-    # Расчет аптайма
-    ready_time_str = info.get("readyTime")
+    # вычисляем uptime
     uptime = None
-    if ready_time_str:
-        ts = ready_time_str
-        if ts.endswith('Z'):
-            ts = ts[:-1] + '+00:00'
+    ready_ts = info.get("readyTime")
+    if ready_ts:
+        iso = ready_ts.rstrip('Z') + '+00:00'
         try:
-            ready_dt = datetime.datetime.fromisoformat(ts)
-            uptime = (datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc) - ready_dt).total_seconds()
-        except Exception:
+            started = datetime.datetime.fromisoformat(iso)
+            now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+            uptime = (now - started).total_seconds()
+        except ValueError:
             uptime = None
 
-    # Сбор статистики читателей
+    # считаем читателей по протоколам
     readers = info.get("readers", [])
-    protocol_counts = {}
+    proto_counts: dict[str, int] = {}
     for r in readers:
-        proto = r.get("protocol") or "unknown"
-        protocol_counts[proto] = protocol_counts.get(proto, 0) + 1
+        proto = r.get("protocol", "unknown")
+        proto_counts[proto] = proto_counts.get(proto, 0) + 1
 
     return {
         "stream_key": stream_key,
         "status": "running" if info.get("ready") else "stopped",
-        "ready_time": info.get("readyTime"),
         "uptime_seconds": uptime,
         "bytes_received": info.get("bytesReceived"),
         "bytes_sent": info.get("bytesSent"),
-        "packets_received": info.get("packetsReceived"),
-        "packets_sent": info.get("packetsSent"),
         "source": info.get("source"),
-        "source_on_demand": info.get("sourceOnDemand"),
         "tracks": info.get("tracks"),
         "readers_count": len(readers),
-        "readers": readers,
-        "protocol_counts": protocol_counts,
     }
+
 
 @app.get("/streams")
 async def list_streams():
     """
-    Return a list of all registered RTSP streams with detailed stats.
+    Список всех RTSP-потоков с базовой статистикой и группировкой треков.
     """
-    url = "http://localhost:9997/v3/paths/list"
     async with httpx.AsyncClient() as client:
-        resp = await client.get(url)
-
+        resp = await client.get(f"{PATHS_API}/list")
     if resp.status_code != 200:
-        print(f"[ERROR] MediaMTX list failed. URL: {url}, Status: {resp.status_code}, Body: {resp.text}")
         raise HTTPException(500, detail="Ошибка получения списка стримов")
 
-    data = resp.json()
-    items = data.get("items", [])
-    streams = []
-    for item in items:
-        name = item.get("name", "")
-        stream_key = name.split("/", 1)[1] if "/" in name else name
-
-        # Сбор статистики читателей
-        readers = item.get("readers", [])
-        protocol_counts = {}
+    data = resp.json().get("items", [])
+    result = []
+    for itm in data:
+        name = itm.get("name", "")
+        key = name.split('/', 1)[-1]
+        # считаем читателей
+        readers = itm.get("readers", [])
+        proto_counts: dict[str, int] = {}
         for r in readers:
-            proto = r.get("protocol") or "unknown"
-            protocol_counts[proto] = protocol_counts.get(proto, 0) + 1
-
-        # Группировка треков по типам (поддерживаем и dict, и str форматы)
-        raw_tracks = item.get("tracks", [])
-        track_types = {}
+            p = r.get("protocol", "unknown")
+            proto_counts[p] = proto_counts.get(p, 0) + 1
+        # группируем типы треков
+        raw_tracks = itm.get("tracks", [])
+        track_counts: dict[str, int] = {}
         for t in raw_tracks:
             if isinstance(t, dict):
                 ttype = t.get("type") or "unknown"
@@ -164,55 +150,54 @@ async def list_streams():
                 ttype = t.split(":", 1)[0] if ":" in t else "unknown"
             else:
                 ttype = "unknown"
-            track_types[ttype] = track_types.get(ttype, 0) + 1
+            track_counts[ttype] = track_counts.get(ttype, 0) + 1
 
-        streams.append({
-            "stream_key": stream_key,
-            "status": "running" if item.get("ready") else "stopped",
-            "ready_time": item.get("readyTime"),
-            "bytes_received": item.get("bytesReceived"),
-            "bytes_sent": item.get("bytesSent"),
-            "source": item.get("source"),
+        result.append({
+            "stream_key": key,
+            "status": "running" if itm.get("ready") else "stopped",
+            "ready_time": itm.get("readyTime"),
+            "bytes_received": itm.get("bytesReceived"),
+            "bytes_sent": itm.get("bytesSent"),
+            "source": itm.get("source"),
             "readers_count": len(readers),
-            "protocol_counts": protocol_counts,
+            "protocol_counts": proto_counts,
             "tracks": raw_tracks,
-            "track_counts_by_type": track_types,
+            "track_counts": track_counts,
         })
+    return {"streams": result}
 
-    return {"streams": streams}
 
 @app.get("/health")
 async def health():
     """
-    Проверяет доступность MediaMTX.
+    Проверка доступности MediaMTX.
     """
-    url = "http://localhost:9997/v3/paths/list"
     try:
-        async with httpx.AsyncClient(timeout=2.0) as client:
-            resp = await client.get(url)
+        async with httpx.AsyncClient(timeout=2) as client:
+            resp = await client.get(f"{PATHS_API}/list")
         if resp.status_code == 200:
             return {"status": "ok"}
-        raise HTTPException(503, detail=f"MediaMTX unhealthy: {resp.status_code}")
-    except httpx.RequestError as e:
-        raise HTTPException(503, detail=f"Cannot reach MediaMTX: {e}")
+    except httpx.RequestError:
+        pass
+    raise HTTPException(503, detail="MediaMTX unavailable")
+
 
 @app.get("/streams/{stream_key}/preview")
 def preview(stream_key: str):
     """
     Возвращает первые 5 секунд RTSP-потока как MPEG-TS.
     """
-    rtsp_url = f"rtsp://localhost:8554/live/{stream_key}"
+    rtsp = f"rtsp://{MEDIA_MTX_HOST}:8554/live/{stream_key}"
     cmd = [
-        "ffmpeg",
-        "-rtsp_transport", "tcp",
-        "-i", rtsp_url,
+        "ffmpeg", "-rtsp_transport", "tcp",
+        "-i", rtsp,
         "-t", "5",
         "-c", "copy",
         "-f", "mpegts",
-        "pipe:1"
+        "pipe:1",
     ]
     try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="ffmpeg не найден в PATH")
+        raise HTTPException(500, detail="ffmpeg не найден в PATH")
     return StreamingResponse(proc.stdout, media_type="video/mp2t")
