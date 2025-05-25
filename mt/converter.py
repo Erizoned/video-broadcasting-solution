@@ -1,24 +1,24 @@
 import re
-import datetime
-import subprocess
-
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+import subprocess
+import datetime
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Конфигурация MediaMTX API
-MEDIA_MTX_HOST = "localhost"
-MEDIA_MTX_PORT = 9997
-MEDIA_MTX_BASE = f"http://{MEDIA_MTX_HOST}:{MEDIA_MTX_PORT}/v3"
-PATHS_CONFIG = f"{MEDIA_MTX_BASE}/config/paths"
-PATHS_API = f"{MEDIA_MTX_BASE}/paths"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # или ["http://localhost:3006"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Запущенные процессы публикации потоков
-processes: dict[str, subprocess.Popen] = {}
-
+# Точка добавления путей в MediaMTX
+MEDIA_MTX_API = "http://localhost:9997/v3/config/paths/add"
 
 class StreamRegistration(BaseModel):
     """Модель для регистрации RTMP→RTSP конвертации"""
@@ -142,13 +142,21 @@ async def list_streams():
         raw_tracks = itm.get("tracks", [])
         track_counts: dict[str, int] = {}
         for t in raw_tracks:
-            typ = t.get("type") if isinstance(t, dict) else t.split(':')[0]
-            track_counts[typ or "unknown"] = track_counts.get(typ, 0) + 1
-        result.append({
-            "stream_key": key,
-            "status": "running" if itm.get("ready") else "stopped",
-            "bytes_received": itm.get("bytesReceived"),
-            "bytes_sent": itm.get("bytesSent"),
+            if isinstance(t, dict):
+                ttype = t.get("type") or "unknown"
+            elif isinstance(t, str):
+                ttype = t.split(":", 1)[0] if ":" in t else "unknown"
+            else:
+                ttype = "unknown"
+            track_types[ttype] = track_types.get(ttype, 0) + 1
+
+        streams.append({
+            "stream_key": stream_key,
+            "status": "running" if item.get("ready") else "stopped",
+            "ready_time": item.get("readyTime"),
+            "bytes_received": item.get("bytesReceived"),
+            "bytes_sent": item.get("bytesSent"),
+            "source": item.get("source"),
             "readers_count": len(readers),
             "protocol_counts": proto_counts,
             "tracks": raw_tracks,

@@ -5,6 +5,6 @@ venv/
 
 # Optional: exclude specific folder if you only want to ignore video there
 # /backend/videos/*.mp4
-
+*.pyc
 /mt/__pycache__
 __pycache__/
